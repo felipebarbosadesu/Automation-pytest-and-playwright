@@ -1,79 +1,162 @@
-# Swag Labs (SauceDemo) E2E Web Tests — Pytest + Playwright
+# Automation with Pytest & Playwright
 
-Automated end-to-end tests for **https://www.saucedemo.com/** using **Pytest + Playwright** with **Page Object Model** and **evidence collection** (screenshots/videos/traces).
+## End-to-End Web Testing Framework — Swag Labs (SauceDemo)
 
-## ✅ What’s covered
-- Login (valid users + locked out)
-- Add item to cart (smoke)
-- Checkout happy path (regression / e2e)
-- Evidences on failures (screenshot) + replay (trace) + video
+This repository contains an **end-to-end (E2E) web test automation framework** built with **Python**, using **Pytest** and **Playwright**, focused on **e-commerce testing**.
 
-## 🧱 Tech stack
-- Python
-- Pytest
-- Playwright
-- Page Object Model
-- GitHub Actions CI
+The project was created as part of my **Python and QA Automation studies**, applying industry best practices such as **Page Object Model**, **CI/CD with GitHub Actions**, **automated test reports**, and **evidence collection**.
 
-## 🚀 Run locally
+Target application: [https://www.saucedemo.com/](https://www.saucedemo.com/)
 
-### 1) Create venv + install deps
+---
+
+## Scope of tests
+
+The framework currently covers real e-commerce scenarios:
+
+* **Authentication**
+
+  * Valid users
+  * Locked user (`locked_out_user`)
+* **Cart**
+
+  * Add products (Smoke tests)
+* **Checkout**
+
+  * Complete happy path (Regression / E2E)
+* **Test evidences**
+
+  * Screenshot on failure
+  * Execution video
+  * Playwright trace for execution replay
+
+---
+
+## Tech stack
+
+* Python
+* Pytest
+* Playwright
+* Page Object Model (POM)
+* GitHub Actions (CI/CD)
+* HTML Test Report
+* JUnit (test result summary)
+
+---
+
+## Local execution
+
+### 1) Create virtual environment
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+```
+
+### 2) Install dependencies
+
+```bash
 pip install -U pip
 pip install -r requirements.txt
 playwright install
 ```
 
-### 2) Configure env
-Copy `.env.example` to `.env` (local only):
+### 3) Environment configuration
+
+Create a `.env` file from the example:
+
 ```bash
 cp .env.example .env
 ```
 
-### 3) Run tests
+### 4) Run tests
+
 ```bash
 pytest
 ```
 
-### Run only smoke
+### Run smoke tests only
+
 ```bash
 pytest -m smoke
 ```
 
-### Run regression
+### Run regression / E2E tests
+
 ```bash
 pytest -m regression
 ```
 
-### Generate HTML report
+---
+
+## Reports and evidences
+
+### HTML report
+
 ```bash
 pytest --html=artifacts/reports/report.html --self-contained-html
 ```
 
-## 📸 Evidences (Artifacts)
-On failure, a screenshot is saved to:
-- `artifacts/screenshots/`
+### Generated evidences
 
-For every test run, Playwright also saves:
-- video: `artifacts/videos/`
-- trace: `artifacts/traces/` (open with `playwright show-trace <file.zip>`)
+* Screenshots (only on failure):
+  `artifacts/screenshots/`
+* Execution videos:
+  `artifacts/videos/`
+* Playwright traces:
+  `artifacts/traces/`
 
-## 🔐 Test credentials (SauceDemo)
+To open a trace:
+
+```bash
+playwright show-trace artifacts/traces/<file>.zip
+```
+
+---
+
+## CI/CD — GitHub Actions
+
+The project includes automated workflows using **GitHub Actions**:
+
+* Daily scheduled execution
+* Automated test result summary
+* Upload of reports and evidences as artifacts
+* Execution summary available directly in the workflow **Summary** tab
+
+Workflow files:
+
+```text
+.github/workflows/
+├── tests.yml        # runs on push / pull request
+└── daily-tests.yml  # daily scheduled execution
+```
+
+---
+
+## Test credentials (SauceDemo)
+
 Accepted usernames:
-- `standard_user`
-- `locked_out_user`
-- `problem_user`
-- `performance_glitch_user`
-- `error_user`
-- `visual_user`
+
+* `standard_user`
+* `locked_out_user`
+* `problem_user`
+* `performance_glitch_user`
+* `error_user`
+* `visual_user`
 
 Password for all users:
-- `secret_sauce`
 
-## 🤖 CI (GitHub Actions)
-Workflow file:
-- `.github/workflows/tests.yml`
+```text
+secret_sauce
+```
 
-It runs tests on push/PR and uploads `artifacts/` as build artifacts.
+---
+
+## Project goal
+
+The main goals of this project are:
+
+* Strengthen Python skills applied to QA automation
+* Demonstrate modern and reliable web test automation
+* Apply real CI/CD practices
+* Serve as a professional QA automation portfolio project
