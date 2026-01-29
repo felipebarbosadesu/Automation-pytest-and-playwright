@@ -93,6 +93,8 @@ pytest -m regression
 
 ### HTML report
 
+<img width="1470" height="956" alt="Captura de Tela 2026-01-29 às 09 21 35" src="https://github.com/user-attachments/assets/a98cea88-9cc0-46f6-8b1d-9f81a97f346a" />
+
 ```bash
 pytest --html=artifacts/reports/report.html --self-contained-html
 ```
