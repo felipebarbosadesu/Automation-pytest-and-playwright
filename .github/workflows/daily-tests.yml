@@ -2,9 +2,8 @@ name: daily-e2e
 
 on:
   schedule:
-    # 09:00 UTC = 06:00 (Bahia, -03). Ajuste se quiser outro horário.
-    - cron: "0 9 * * *"
-  workflow_dispatch: {}  # permite rodar manualmente também
+    - cron: "0 20 * * *" # 17:00 Bahia (-03) = 20:00 UTC
+  workflow_dispatch: {}
 
 jobs:
   run:
@@ -26,14 +25,56 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps
 
-      - name: Run tests (HTML report)
+      - name: Run tests (HTML + JUnit)
         env:
           ENV: dev
           HEADLESS: "true"
           SLOW_MO: "0"
         run: |
           mkdir -p artifacts/reports
-          pytest --html=artifacts/reports/report.html --self-contained-html
+          pytest \
+            --html=artifacts/reports/report.html --self-contained-html \
+            --junitxml=artifacts/reports/junit.xml
+
+      - name: Build summary (from JUnit)
+        if: always()
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          p = Path("artifacts/reports/junit.xml")
+          if not p.exists():
+            print("SUMMARY=No junit.xml found" )
+            exit(0)
+
+          root = ET.parse(p).getroot()
+
+          # pytest usually writes <testsuite ...> (sometimes wrapped in <testsuites>)
+          suite = root
+          if root.tag == "testsuites":
+            suite = root.find("testsuite") or root
+
+          tests = int(suite.attrib.get("tests", 0))
+          failures = int(suite.attrib.get("failures", 0))
+          errors = int(suite.attrib.get("errors", 0))
+          skipped = int(suite.attrib.get("skipped", 0))
+          passed = tests - failures - errors - skipped
+
+          summary = f"Total: {tests} | Passed: {passed} | Failed: {failures} | Errors: {errors} | Skipped: {skipped}"
+          print("SUMMARY=" + summary)
+
+          # export to env for next steps
+          with open("summary.env", "w", encoding="utf-8") as f:
+            f.write("SUMMARY=" + summary + "\n")
+          PY
+
+      - name: Export summary env
+        if: always()
+        run: |
+          if [ -f summary.env ]; then
+            cat summary.env >> $GITHUB_ENV
+          fi
 
       - name: Upload artifacts (report + evidences)
         if: always()
@@ -41,3 +82,23 @@ jobs:
         with:
           name: daily-test-artifacts
           path: artifacts/
+
+      - name: Send email summary
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[Daily E2E] Swag Labs results - ${{ github.repository }}"
+          to: "felipebarbosateacher@gmail.com"
+          from: "GitHub Actions <felipebarbosateacher@gmail.com>"
+          secure: false
+          body: |
+            Daily E2E run finished.
+
+            ${{ env.SUMMARY }}
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Artifact: Open the run and download "daily-test-artifacts" (report + evidences).
