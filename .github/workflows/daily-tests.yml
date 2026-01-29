@@ -1,0 +1,43 @@
+name: daily-e2e
+
+on:
+  schedule:
+    # 09:00 UTC = 06:00 (Bahia, -03). Ajuste se quiser outro horário.
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}  # permite rodar manualmente também
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          playwright install --with-deps
+
+      - name: Run tests (HTML report)
+        env:
+          ENV: dev
+          HEADLESS: "true"
+          SLOW_MO: "0"
+        run: |
+          mkdir -p artifacts/reports
+          pytest --html=artifacts/reports/report.html --self-contained-html
+
+      - name: Upload artifacts (report + evidences)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-test-artifacts
+          path: artifacts/
